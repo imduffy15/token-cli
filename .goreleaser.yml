@@ -1,0 +1,108 @@
+# Build customization
+build:
+  # Path to main.go file.
+  # Default is `main.go`
+  binary: token-cli
+
+  env:
+  - CGO_ENABLED=0
+
+  # GOOS list to build in.
+  # For more info refer to https://golang.org/doc/install/source#environment
+  # Defaults are darwin and linux
+  goos:
+  - linux
+  - darwin
+
+  # GOARCH to build in.
+  # For more info refer to https://golang.org/doc/install/source#environment
+  # Defaults are 386 and amd64
+  goarch:
+  - amd64
+
+  ldflags: -X github.com/imduffy15/token-cli/version.Version={{.Version}}
+
+release:
+  # Repo in which the release will be created.
+  # Default is extracted from the origin remote URL.
+  github:
+    owner: imduffy15
+    name: token-cli
+
+  # If set to true, will not auto-publish the release.
+  # Default is false.
+  draft: false
+
+  # If set to true, will mark the release as not ready for production.
+  # Default is false.
+  prerelease: false
+
+  # You can change the name of the GitHub release.
+  # Default is ``
+  name_template: "{{.ProjectName}}-v{{.Version}}"
+
+  # You can disable this pipe in order to not upload any artifacts to
+  # GitHub.
+  # Defaults to false.
+  disable: false
+
+nfpm:
+  name_template: '{{ .ProjectName }}_{{ .Arch }}'
+  homepage:  https://github.com/imduffy15/token-cli
+  description: OpenID token generator
+  maintainer: Ian Duffy <ian@ianduffy.ie>
+  license: Apache 2.0
+  vendor: imduffy15
+  formats:
+  - deb
+  - rpm
+  recommends:
+  - rpm
+
+# Archive customization
+archive:
+  # You can change the name of the archive.
+  # This is parsed with Golang template engine and the following variables.
+  name_template: "{{.ProjectName}}_{{.Os}}_{{.Arch}}"
+
+  # Archive format. Valid options are `tar.gz` and `zip`.
+  # Default is `zip`
+  format: tar.gz
+
+  # Replacements for GOOS and GOARCH on the archive name.
+  # The keys should be valid GOOS or GOARCH values followed by your custom
+  # replacements.
+  # By default, `replacements` replace GOOS and GOARCH values with valid outputs
+  # of `uname -s` and `uname -m` respectively.
+  replacements:
+    amd64: amd64
+    386: 386
+    darwin: macOS
+    linux: linux
+
+brew:
+  name: token-cli
+
+  github:
+    owner: imduffy15
+    name: homebrew-tap
+
+  commit_author:
+    name: Ian Duffy
+    email: ian@ianduffy.ie
+
+  folder: Formula
+
+  homepage: https://github.com/imduffy15/token-cli
+
+  description: "OpenID token generator"
+
+  skip_upload: false
+
+snapcraft:
+  name_template: '{{ .ProjectName }}_{{ .Arch }}'
+  summary: OpenID token generator.
+  description: |
+    OpenID token generator.
+  grade: stable
+  confinement: classic
