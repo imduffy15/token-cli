@@ -4,3 +4,5 @@ dist
 .history
 pkg
 vendor/*/
+main
+

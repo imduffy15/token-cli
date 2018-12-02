@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"path"
 
@@ -21,10 +22,15 @@ func Read() client.Config {
 
 	data, err := ioutil.ReadFile(Path())
 	if err != nil {
+		fmt.Print(fmt.Errorf(err.Error()))
 		return c
 	}
 
-	json.Unmarshal(data, &c)
+	err = json.Unmarshal(data, &c)
+	if err != nil {
+		fmt.Print(fmt.Errorf(err.Error()))
+		return c
+	}
 
 	return c
 }

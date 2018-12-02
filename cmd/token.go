@@ -10,15 +10,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func addAuthcodeTokenToContext(clientID string, token client.Token, log cli.Logger) {
-	ctx := client.ClientContext{
-		ClientID: clientID,
-		Token:    token,
-	}
-
-	SaveContext(ctx, log)
-}
-
 func AuthcodeTokenArgumentValidation(cfg client.Config, args []string, port int) error {
 	if err := EnsureActiveTarget(cfg); err != nil {
 		return err
@@ -29,21 +20,31 @@ func AuthcodeTokenArgumentValidation(cfg client.Config, args []string, port int)
 	return nil
 }
 
-func SaveContext(context client.ClientContext, log cli.Logger) {
+func SaveContext(context client.ClientContext, log cli.Logger) error {
 	c := GetSavedConfig()
-	c.AddContext(context)
-	config.Write(c)
+	err := c.AddContext(context)
+	if err != nil {
+		return err
+	}
+	err = config.Write(c)
+	if err != nil {
+		return err
+	}
 	log.Robots(context.Token.AccessToken)
+	return nil
 }
 
 func AuthcodeTokenCommandRun(doneRunning chan bool, clientID string, authCodeImp cli.ClientImpersonator, log cli.Logger) {
 	authCodeImp.Start()
 	authCodeImp.Authorize()
 	token := <-authCodeImp.Done()
-	SaveContext(client.ClientContext{
+	err := SaveContext(client.ClientContext{
 		ClientID: clientID,
 		Token:    token,
 	}, log)
+	if err != nil {
+		log.Errorf("Failed to save context: %v", err)
+	}
 	doneRunning <- true
 }
 
@@ -60,8 +61,7 @@ func refreshContext(contextName string, cfg client.Config, log cli.Logger) error
 		return err
 	}
 	context.Token = token
-	SaveContext(context, log)
-	return nil
+	return SaveContext(context, log)
 }
 
 var tokenCmd = &cobra.Command{

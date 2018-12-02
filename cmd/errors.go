@@ -41,7 +41,10 @@ func EnsureTargetInConfig(cfg client.Config, targetName string) error {
 func NotifyValidationErrors(err error, cmd *cobra.Command, log cli.Logger) {
 	if err != nil {
 		log.Error(err.Error())
-		cmd.Usage()
+		err = cmd.Usage()
+		if err != nil {
+			log.Error(err.Error())
+		}
 		os.Exit(1)
 	}
 }

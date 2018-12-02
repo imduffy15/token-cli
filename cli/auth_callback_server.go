@@ -76,9 +76,19 @@ func (acs AuthCallbackServer) Start(done chan url.Values) {
 	}
 
 	serveMux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		io.WriteString(w, acs.css)
-		io.WriteString(w, acs.html)
-		io.WriteString(w, acs.javascript)
+		_, err := io.WriteString(w, acs.css)
+		if err != nil {
+			acs.log.Errorf("Failed to serve CSS: %v", err)
+		}
+		_, err = io.WriteString(w, acs.html)
+		if err != nil {
+			acs.log.Errorf("Failed to serve HTML: %v", err)
+		}
+		_, err = io.WriteString(w, acs.javascript)
+		if err != nil {
+			acs.log.Errorf("Failed to serve CSS: %v", err)
+
+		}
 		acs.log.Infof("Local server received request to %v %v", r.Method, r.RequestURI)
 
 		// This is a goroutine because we want this handleFunc to complete before

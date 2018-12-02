@@ -46,7 +46,10 @@ func UpdateTargetCmd(cfg client.Config, httpClient *http.Client, openIDConfigura
 	}
 
 	var openidConfiguration openidConfiguration
-	json.Unmarshal(body, &openidConfiguration)
+	err = json.Unmarshal(body, &openidConfiguration)
+	if err != nil {
+		return nil
+	}
 
 	target := client.Target{
 		Name:                  name,
@@ -57,7 +60,10 @@ func UpdateTargetCmd(cfg client.Config, httpClient *http.Client, openIDConfigura
 
 	cfg.AddTarget(target)
 
-	config.Write(cfg)
+	err = config.Write(cfg)
+	if err != nil {
+		return err
+	}
 	log.Info("Successfully added target " + utils.Emphasize(name))
 	printTarget(target)
 	return nil
@@ -101,8 +107,12 @@ var setCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg := GetSavedConfig()
 		cfg.ActiveTargetName = args[0]
-		config.Write(cfg)
-		log.Info("Successfully set target to " + utils.Emphasize(args[0]))
+		err := config.Write(cfg)
+		if err != nil {
+			log.Error(err.Error())
+		} else {
+			log.Info("Successfully set target to " + utils.Emphasize(args[0]))
+		}
 	},
 }
 
@@ -115,8 +125,11 @@ var deleteCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg := GetSavedConfig()
-		cfg.DeleteTarget(args[0])
-		config.Write(cfg)
+		NotifyErrorsWithRetry(cfg.DeleteTarget(args[0]), log)
+		err := config.Write(cfg)
+		if err != nil {
+			log.Error(err.Error())
+		}
 	},
 }
 
@@ -168,7 +181,11 @@ func targetCmdArgumentValidation(cfg client.Config, args []string) error {
 func init() {
 
 	createCmd.Flags().StringVarP(&openIDConfigurationURL, "openid-configuration-url", "t", "", "OpenID Configuration URL")
-	createCmd.MarkFlagRequired("openid-configuration-url")
+	err := createCmd.MarkFlagRequired("openid-configuration-url")
+	if err != nil {
+		log.Error(err.Error())
+	}
+
 	createCmd.Flags().BoolVarP(&skipSSLValidation, "skip-ssl-validation", "k", false, "Disable security validation on requests to this target")
 
 	targetCmd.AddCommand(getCmd)

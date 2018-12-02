@@ -99,14 +99,18 @@ func (aci AuthcodeClientImpersonator) Authorize() {
 
 	authURL, err := url.Parse(aci.config.GetActiveTarget().AuthorizationEndpoint)
 	if err != nil {
-		aci.Log.Error("Something went wrong while building the authorization URL.")
+		aci.Log.Errorf("Something went wrong while building the authorization URL: %v", err)
 		os.Exit(1)
 	}
 
 	authURL.RawQuery = requestValues.Encode()
 
 	aci.Log.Info("Launching browser window to " + authURL.String() + " where the user should login and grant approvals")
-	aci.BrowserLauncher(authURL.String())
+	err = aci.BrowserLauncher(authURL.String())
+	if err != nil {
+		aci.Log.Errorf("Error launching the browser: %v", err)
+		os.Exit(1)
+	}
 }
 
 func (aci AuthcodeClientImpersonator) Done() chan client.Token {

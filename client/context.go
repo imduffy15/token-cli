@@ -60,8 +60,7 @@ func (c *Config) AddContext(newClientContext ClientContext) error {
 }
 
 func (c Config) GetTarget(targetName string) *Target {
-	val, _ := c.Targets[targetName]
-	return val
+	return c.Targets[targetName]
 }
 
 func (c Config) TargetExists(targetName string) bool {
@@ -69,12 +68,16 @@ func (c Config) TargetExists(targetName string) bool {
 	return found
 }
 
-func (c Config) DeleteTarget(targetName string) {
+func (c Config) DeleteTarget(targetName string) error {
 	for k := range c.Targets[targetName].ClientContexts {
-		keyring.Delete(targetName, k)
+		err := keyring.Delete(targetName, k)
+		if err != nil {
+			return err
+		}
 		delete(c.Targets[targetName].ClientContexts, k)
 	}
 	delete(c.Targets, targetName)
+	return nil
 }
 
 func (c Config) ListTargets() []string {
