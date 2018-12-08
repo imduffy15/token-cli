@@ -22,9 +22,10 @@ var (
 )
 
 var (
-	scope string
-	port  int
-	force bool
+	scope        string
+	clientSecret string
+	port         int
+	force        bool
 )
 
 var RootCmd = cobra.Command{

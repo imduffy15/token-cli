@@ -27,17 +27,20 @@ func postToOAuthToken(httpClient *http.Client, config Config, body map[string]st
 }
 
 type AuthorizationCodeClient struct {
-	ClientID string
+	ClientID     string
+	ClientSecret string
 }
 
 type RefreshTokenClient struct {
-	ClientID string
+	ClientID     string
+	ClientSecret string
 }
 
 func (acc AuthorizationCodeClient) RequestToken(httpClient *http.Client, config Config, code string, redirectURI string) (Token, error) {
 	body := map[string]string{
 		"grant_type":    string(AuthCode),
 		"client_id":     acc.ClientID,
+		"client_secret": acc.ClientSecret,
 		"response_type": "token",
 		"redirect_uri":  redirectURI,
 		"code":          code,
@@ -51,6 +54,7 @@ func (rc RefreshTokenClient) RequestToken(httpClient *http.Client, config Config
 		"grant_type":    string(RefreshToken),
 		"refresh_token": refreshToken,
 		"client_id":     rc.ClientID,
+		"client_secret": rc.ClientSecret,
 		"response_type": "token",
 	}
 

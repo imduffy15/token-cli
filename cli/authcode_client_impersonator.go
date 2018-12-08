@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/imduffy15/token-cli/client"
 )
 
@@ -20,6 +21,7 @@ type AuthcodeClientImpersonator struct {
 	httpClient         *http.Client
 	config             client.Config
 	ClientID           string
+	ClientSecret       string
 	Scope              string
 	Port               int
 	Log                Logger
@@ -46,6 +48,7 @@ func NewAuthcodeClientImpersonator(
 	httpClient *http.Client,
 	config client.Config,
 	clientID string,
+	clientSecret string,
 	scope string,
 	port int,
 	log Logger,
@@ -55,6 +58,7 @@ func NewAuthcodeClientImpersonator(
 		httpClient:      httpClient,
 		config:          config,
 		ClientID:        clientID,
+		ClientSecret:    clientSecret,
 		Scope:           scope,
 		Port:            port,
 		BrowserLauncher: launcher,
@@ -79,7 +83,7 @@ func (aci AuthcodeClientImpersonator) Start() {
 		go aci.AuthCallbackServer.Start(urlValues)
 		values := <-urlValues
 		code := values.Get("code")
-		tokenRequester := client.AuthorizationCodeClient{ClientID: aci.ClientID}
+		tokenRequester := client.AuthorizationCodeClient{ClientID: aci.ClientID, ClientSecret: aci.ClientSecret}
 		aci.Log.Infof("Calling token endpoint to exchange code %v for an access token", code)
 		resp, err := tokenRequester.RequestToken(aci.httpClient, aci.config, code, aci.redirectURI())
 		if err != nil {
@@ -96,6 +100,7 @@ func (aci AuthcodeClientImpersonator) Authorize() {
 	requestValues.Add("client_id", aci.ClientID)
 	requestValues.Add("redirect_uri", aci.redirectURI())
 	requestValues.Add("scope", strings.Replace(aci.Scope, ",", " ", -1))
+	requestValues.Add("state", uuid.New().String())
 
 	authURL, err := url.Parse(aci.config.GetActiveTarget().AuthorizationEndpoint)
 	if err != nil {

@@ -90,7 +90,7 @@ var getAuthcodeToken = &cobra.Command{
 				}
 			}
 		} else {
-			authCodeImp := cli.NewAuthcodeClientImpersonator(HTTPClient(), cfg, args[0], scope, port, log, open.Run)
+			authCodeImp := cli.NewAuthcodeClientImpersonator(HTTPClient(), cfg, args[0], clientSecret, scope, port, log, open.Run)
 			go AuthcodeTokenCommandRun(done, args[0], authCodeImp, log)
 			<-done
 		}
@@ -99,7 +99,9 @@ var getAuthcodeToken = &cobra.Command{
 
 func init() {
 	getAuthcodeToken.Flags().IntVarP(&port, "port", "p", 8080, "port on which to run local callback server")
-	getAuthcodeToken.Flags().StringVarP(&scope, "scope", "s", "openid offline_access", "comma-separated scopes to request in token")
+	getAuthcodeToken.Flags().StringVarP(&scope, "scope", "s", "openid,offline_access", "comma-separated scopes to request in token")
+	getAuthcodeToken.Flags().StringVarP(&clientSecret, "client_secret", "c", "", "client secret")
+
 	getAuthcodeToken.Flags().BoolVarP(&force, "force", "f", false, "Forces a new token")
 	tokenCmd.AddCommand(getAuthcodeToken)
 	RootCmd.AddCommand(tokenCmd)

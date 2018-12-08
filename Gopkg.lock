@@ -26,6 +26,14 @@
   version = "v5.0.1"
 
 [[projects]]
+  digest = "1:236d7e1bdb50d8f68559af37dbcf9d142d56b431c9b2176d41e2a009b664cda8"
+  name = "github.com/google/uuid"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "9b3b1e0f5f99ae461456d768e7d301a7acdaa2d8"
+  version = "v1.1.0"
+
+[[projects]]
   digest = "1:870d441fe217b8e689d7949fef6e43efbc787e50f200cb1e70dbca9204a1d6be"
   name = "github.com/inconshreveable/mousetrap"
   packages = ["."]
@@ -97,6 +105,7 @@
   analyzer-version = 1
   input-imports = [
     "github.com/fatih/color",
+    "github.com/google/uuid",
     "github.com/skratchdot/open-golang/open",
     "github.com/spf13/cobra",
     "github.com/zalando/go-keyring",
