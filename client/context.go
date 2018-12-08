@@ -22,7 +22,8 @@ type Target struct {
 }
 
 type ClientContext struct {
-	ClientID string `json:"client_id"`
+	ClientID     string `json:"client_id"`
+	ClientSecret string `json:"client_secret"`
 	Token
 }
 

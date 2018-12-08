@@ -24,6 +24,7 @@ var (
 var (
 	scope        string
 	clientSecret string
+	audience     string
 	port         int
 	force        bool
 )

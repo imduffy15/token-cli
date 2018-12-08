@@ -22,6 +22,7 @@ type AuthcodeClientImpersonator struct {
 	config             client.Config
 	ClientID           string
 	ClientSecret       string
+	Audience           string
 	Scope              string
 	Port               int
 	Log                Logger
@@ -49,6 +50,7 @@ func NewAuthcodeClientImpersonator(
 	config client.Config,
 	clientID string,
 	clientSecret string,
+	audience string,
 	scope string,
 	port int,
 	log Logger,
@@ -59,6 +61,7 @@ func NewAuthcodeClientImpersonator(
 		config:          config,
 		ClientID:        clientID,
 		ClientSecret:    clientSecret,
+		Audience:        audience,
 		Scope:           scope,
 		Port:            port,
 		BrowserLauncher: launcher,
@@ -98,6 +101,9 @@ func (aci AuthcodeClientImpersonator) Authorize() {
 	requestValues := url.Values{}
 	requestValues.Add("response_type", "code")
 	requestValues.Add("client_id", aci.ClientID)
+	if aci.Audience != "" {
+		requestValues.Add("audience", aci.Audience)
+	}
 	requestValues.Add("redirect_uri", aci.redirectURI())
 	requestValues.Add("scope", strings.Replace(aci.Scope, ",", " ", -1))
 	requestValues.Add("state", uuid.New().String())

@@ -54,7 +54,8 @@ func refreshContext(contextName string, cfg client.Config, log cli.Logger) error
 		return err
 	}
 	refreshClient := client.RefreshTokenClient{
-		ClientID: context.ClientID,
+		ClientID:     context.ClientID,
+		ClientSecret: context.ClientSecret,
 	}
 	token, err := refreshClient.RequestToken(HTTPClient(), cfg, context.Token.RefreshToken)
 	if err != nil {
@@ -90,7 +91,7 @@ var getAuthcodeToken = &cobra.Command{
 				}
 			}
 		} else {
-			authCodeImp := cli.NewAuthcodeClientImpersonator(HTTPClient(), cfg, args[0], clientSecret, scope, port, log, open.Run)
+			authCodeImp := cli.NewAuthcodeClientImpersonator(HTTPClient(), cfg, args[0], clientSecret, audience, scope, port, log, open.Run)
 			go AuthcodeTokenCommandRun(done, args[0], authCodeImp, log)
 			<-done
 		}
@@ -99,8 +100,9 @@ var getAuthcodeToken = &cobra.Command{
 
 func init() {
 	getAuthcodeToken.Flags().IntVarP(&port, "port", "p", 8080, "port on which to run local callback server")
-	getAuthcodeToken.Flags().StringVarP(&scope, "scope", "s", "openid,offline_access", "comma-separated scopes to request in token")
-	getAuthcodeToken.Flags().StringVarP(&clientSecret, "client_secret", "c", "", "client secret")
+	getAuthcodeToken.Flags().StringVarP(&scope, "scope", "s", "openid,offline_access", "comma-separated list of scopes, this will be used as the `scopes` query parameter when requesting the token.")
+	getAuthcodeToken.Flags().StringVarP(&clientSecret, "client_secret", "c", "", "this will be used as the `client_secret` query parameter when requesting the token.")
+	getAuthcodeToken.Flags().StringVarP(&audience, "audience", "a", "", "this will be used as the `audience` query parameter when requesting the token.")
 
 	getAuthcodeToken.Flags().BoolVarP(&force, "force", "f", false, "Forces a new token")
 	tokenCmd.AddCommand(getAuthcodeToken)
