@@ -13,12 +13,14 @@ build:
   goos:
   - linux
   - darwin
+  - windows
 
   # GOARCH to build in.
   # For more info refer to https://golang.org/doc/install/source#environment
   # Defaults are 386 and amd64
   goarch:
   - amd64
+  - 386
 
   ldflags: -X github.com/imduffy15/token-cli/version.Version={{.Version}}
 
@@ -79,6 +81,10 @@ archive:
     386: 386
     darwin: macOS
     linux: linux
+
+  format_overrides:
+  - goos: windows
+    format: zip
 
 brew:
   name: token-cli
