@@ -84,7 +84,7 @@ var getAuthcodeToken = &cobra.Command{
 			if val, err := cfg.GetContext(args[0]); err != nil {
 				NotifyErrorsWithRetry(err, log)
 			} else {
-				if time.Unix(val.Token.ExpiresAt, 0).Sub(time.Now()) >= time.Minute*5 {
+				if !forceRefresh && time.Unix(val.Token.ExpiresAt, 0).Sub(time.Now()) >= time.Minute*5 {
 					log.Robots(val.Token.AccessToken)
 				} else {
 					NotifyErrorsWithRetry(refreshContext(val.ClientID, cfg, log), log)
@@ -105,6 +105,7 @@ func init() {
 	getAuthcodeToken.Flags().StringVarP(&audience, "audience", "a", "", "this will be used as the `audience` query parameter when requesting the token.")
 
 	getAuthcodeToken.Flags().BoolVarP(&force, "force", "f", false, "Forces a new token")
+	getAuthcodeToken.Flags().BoolVarP(&forceRefresh, "force-refresh", "r", false, "Forces a refresh")
 	tokenCmd.AddCommand(getAuthcodeToken)
 	RootCmd.AddCommand(tokenCmd)
 }

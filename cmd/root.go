@@ -27,6 +27,7 @@ var (
 	audience     string
 	port         int
 	force        bool
+	forceRefresh bool
 )
 
 var RootCmd = cobra.Command{
