@@ -3,6 +3,7 @@ package client
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -15,7 +16,7 @@ func postToOAuthToken(httpClient *http.Client, config Config, body map[string]st
 	resp := tokenResponse{}
 	err = json.Unmarshal(bytes, &resp)
 	if err != nil {
-		return Token{}, parseError(config.GetActiveTarget().TokenEndpoint, bytes)
+		return Token{}, parseError(err.Error(), bytes)
 	}
 
 	return Token{
@@ -68,11 +69,29 @@ const (
 	AuthCode     = GrantType("authorization_code")
 )
 
+type FlexInt int64
+
+func (fi *FlexInt) UnmarshalJSON(b []byte) error {
+	if b[0] != '"' {
+		return json.Unmarshal(b, (*int64)(fi))
+	}
+	var s string
+	if err := json.Unmarshal(b, &s); err != nil {
+		return err
+	}
+	i, err := strconv.Atoi(s)
+	if err != nil {
+		return err
+	}
+	*fi = FlexInt(i)
+	return nil
+}
+
 type tokenResponse struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-	TokenType    string `json:"token_type"`
-	ExpiresIn    int64  `json:"expires_in"`
+	AccessToken  string  `json:"access_token"`
+	RefreshToken string  `json:"refresh_token"`
+	TokenType    string  `json:"token_type"`
+	ExpiresIn    FlexInt `json:"expires_in"`
 }
 
 type Token struct {
