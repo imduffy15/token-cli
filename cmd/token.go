@@ -48,21 +48,28 @@ func AuthcodeTokenCommandRun(doneRunning chan bool, clientID string, authCodeImp
 	doneRunning <- true
 }
 
-func refreshContext(contextName string, clientSecret string, cfg client.Config, log cli.Logger) error {
+func refreshContext(contextName string, clientSecret string, cfg client.Config, log cli.Logger, doneRunning chan bool) error {
 	context, err := cfg.GetContext(contextName)
 	if err != nil {
 		return err
 	}
-	refreshClient := client.RefreshTokenClient{
-		ClientID:     context.ClientID,
-		ClientSecret: clientSecret,
+	if context.RefreshToken != "" {
+		refreshClient := client.RefreshTokenClient{
+			ClientID:     context.ClientID,
+			ClientSecret: clientSecret,
+		}
+		token, err := refreshClient.RequestToken(HTTPClient(), cfg, context.Token.RefreshToken)
+		if err != nil {
+			return err
+		}
+		context.Token = token
+		return SaveContext(context, log)
+	} else {
+		authCodeImp := cli.NewAuthcodeClientImpersonator(HTTPClient(), cfg, context.ClientID, clientSecret, audience, scope, port, log, open.Run)
+		go AuthcodeTokenCommandRun(doneRunning, context.ClientID, authCodeImp, log)
+		<-doneRunning
+		return nil
 	}
-	token, err := refreshClient.RequestToken(HTTPClient(), cfg, context.Token.RefreshToken)
-	if err != nil {
-		return err
-	}
-	context.Token = token
-	return SaveContext(context, log)
 }
 
 var tokenCmd = &cobra.Command{
@@ -87,7 +94,7 @@ var getAuthcodeToken = &cobra.Command{
 				if !forceRefresh && time.Unix(val.Token.ExpiresAt, 0).Sub(time.Now()) >= time.Minute*5 {
 					log.Robots(val.Token.AccessToken)
 				} else {
-					NotifyErrorsWithRetry(refreshContext(val.ClientID, clientSecret, cfg, log), log)
+					NotifyErrorsWithRetry(refreshContext(val.ClientID, clientSecret, cfg, log, done), log)
 				}
 			}
 		} else {
