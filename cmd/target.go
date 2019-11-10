@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -33,34 +34,45 @@ func printTarget(target client.Target) {
 	})
 }
 
-func UpdateTargetCmd(cfg client.Config, httpClient *http.Client, openIDConfigurationURL string, name string, log cli.Logger) error {
+func UpdateTargetCmd(cfg client.Config, httpClient *http.Client, openIDConfigurationURL string, tokenURL string, authorizationURL string, name string, log cli.Logger) error {
 
-	res, err := httpClient.Get(openIDConfigurationURL)
-	if err != nil {
-		return err
-	}
+	target := client.Target{}
 
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return err
-	}
+	if openIDConfigurationURL != "" {
+		res, err := httpClient.Get(openIDConfigurationURL)
+		if err != nil {
+			return err
+		}
 
-	var openidConfiguration openidConfiguration
-	err = json.Unmarshal(body, &openidConfiguration)
-	if err != nil {
-		return nil
-	}
+		body, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			return err
+		}
 
-	target := client.Target{
-		Name:                  name,
-		SkipSSLValidation:     skipSSLValidation,
-		AuthorizationEndpoint: openidConfiguration.AuthorizationEndpoint,
-		TokenEndpoint:         openidConfiguration.TokenEndpoint,
+		var openidConfiguration openidConfiguration
+		err = json.Unmarshal(body, &openidConfiguration)
+		if err != nil {
+			return nil
+		}
+
+		target = client.Target{
+			Name:                  name,
+			SkipSSLValidation:     skipSSLValidation,
+			AuthorizationEndpoint: openidConfiguration.AuthorizationEndpoint,
+			TokenEndpoint:         openidConfiguration.TokenEndpoint,
+		}
+	} else {
+		target = client.Target{
+			Name:                  name,
+			SkipSSLValidation:     skipSSLValidation,
+			AuthorizationEndpoint: authorizationURL,
+			TokenEndpoint:         tokenURL,
+		}
 	}
 
 	cfg.AddTarget(target)
 
-	err = config.Write(cfg)
+	err := config.Write(cfg)
 	if err != nil {
 		return err
 	}
@@ -70,6 +82,10 @@ func UpdateTargetCmd(cfg client.Config, httpClient *http.Client, openIDConfigura
 }
 
 var openIDConfigurationURL string
+
+var tokenURL string
+
+var authorizationURL string
 
 var targetCmd = &cobra.Command{
 	Use:   "target",
@@ -138,7 +154,7 @@ var listCmd = &cobra.Command{
 	Short: "List all targets",
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg := GetSavedConfig()
-		cli.NewJSONPrinter(log).Print(cfg.ListTargets())
+		_ = cli.NewJSONPrinter(log).Print(cfg.ListTargets())
 	},
 }
 
@@ -147,10 +163,22 @@ var createCmd = &cobra.Command{
 	Short: "Creates a new target",
 	PreRun: func(cmd *cobra.Command, args []string) {
 		NotifyValidationErrors(createCmdArgumentValidation(args), cmd, log)
+
+		if tokenURL != "" && authorizationURL == "" {
+			NotifyValidationErrors(fmt.Errorf("authorization-url must be specified along with token-url"), cmd, log)
+		}
+
+		if authorizationURL!= "" && tokenURL == "" {
+			NotifyValidationErrors(fmt.Errorf("token-url must be specified along with token-url"), cmd, log)
+		}
+
+		if openIDConfigurationURL == "" && (tokenURL == "" || authorizationURL == "") {
+			NotifyValidationErrors(fmt.Errorf("token-url and authorization-url or openid-configuration-url must be specified"), cmd, log)
+		}
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg := GetSavedConfig()
-		NotifyErrorsWithRetry(UpdateTargetCmd(cfg, HTTPClient(), openIDConfigurationURL, args[0], log), log)
+		NotifyErrorsWithRetry(UpdateTargetCmd(cfg, HTTPClient(), openIDConfigurationURL, tokenURL, authorizationURL, args[0], log), log)
 	},
 }
 
@@ -181,10 +209,8 @@ func targetCmdArgumentValidation(cfg client.Config, args []string) error {
 func init() {
 
 	createCmd.Flags().StringVarP(&openIDConfigurationURL, "openid-configuration-url", "t", "", "OpenID Configuration URL")
-	err := createCmd.MarkFlagRequired("openid-configuration-url")
-	if err != nil {
-		log.Error(err.Error())
-	}
+	createCmd.Flags().StringVar(&tokenURL, "token-url","", "Token URL")
+	createCmd.Flags().StringVar(&authorizationURL, "authorization-url","", "Authorization URL")
 
 	createCmd.Flags().BoolVarP(&skipSSLValidation, "skip-ssl-validation", "k", false, "Disable security validation on requests to this target")
 
