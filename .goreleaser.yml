@@ -20,7 +20,6 @@ build:
   # Defaults are 386 and amd64
   goarch:
   - amd64
-  - 386
 
   ldflags: -X github.com/imduffy15/token-cli/version.Version={{.Version}}
 

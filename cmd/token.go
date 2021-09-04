@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/imduffy15/token-cli/cli"
@@ -30,7 +31,11 @@ func SaveContext(context client.ClientContext, log cli.Logger) error {
 	if err != nil {
 		return err
 	}
-	log.Robots(context.Token.AccessToken)
+	token, err := json.Marshal(context.Token)
+	if err != nil {
+		return err
+	}
+	log.Robots(string(token))
 	return nil
 }
 
@@ -92,7 +97,11 @@ var getAuthcodeToken = &cobra.Command{
 				NotifyErrorsWithRetry(err, log)
 			} else {
 				if !forceRefresh && time.Unix(val.Token.ExpiresAt, 0).Sub(time.Now()) >= time.Minute*5 {
-					log.Robots(val.Token.AccessToken)
+					token, err := json.Marshal(val.Token)
+					if err != nil {
+						NotifyErrorsWithRetry(err, log)
+					}
+					log.Robots(string(token))
 				} else {
 					NotifyErrorsWithRetry(refreshContext(val.ClientID, clientSecret, cfg, log, done), log)
 				}

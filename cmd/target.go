@@ -168,7 +168,7 @@ var createCmd = &cobra.Command{
 			NotifyValidationErrors(fmt.Errorf("authorization-url must be specified along with token-url"), cmd, log)
 		}
 
-		if authorizationURL!= "" && tokenURL == "" {
+		if authorizationURL != "" && tokenURL == "" {
 			NotifyValidationErrors(fmt.Errorf("token-url must be specified along with token-url"), cmd, log)
 		}
 
@@ -209,8 +209,8 @@ func targetCmdArgumentValidation(cfg client.Config, args []string) error {
 func init() {
 
 	createCmd.Flags().StringVarP(&openIDConfigurationURL, "openid-configuration-url", "t", "", "OpenID Configuration URL")
-	createCmd.Flags().StringVar(&tokenURL, "token-url","", "Token URL")
-	createCmd.Flags().StringVar(&authorizationURL, "authorization-url","", "Authorization URL")
+	createCmd.Flags().StringVar(&tokenURL, "token-url", "", "Token URL")
+	createCmd.Flags().StringVar(&authorizationURL, "authorization-url", "", "Authorization URL")
 
 	createCmd.Flags().BoolVarP(&skipSSLValidation, "skip-ssl-validation", "k", false, "Disable security validation on requests to this target")
 

@@ -22,6 +22,7 @@ func postToOAuthToken(httpClient *http.Client, config Config, body map[string]st
 	return Token{
 		AccessToken:  resp.AccessToken,
 		RefreshToken: resp.RefreshToken,
+		IDToken:      resp.IDToken,
 		TokenType:    resp.TokenType,
 		ExpiresAt:    time.Now().Add(time.Duration(resp.ExpiresIn) * time.Second).Unix(),
 	}, nil
@@ -89,6 +90,7 @@ func (fi *FlexInt) UnmarshalJSON(b []byte) error {
 
 type tokenResponse struct {
 	AccessToken  string  `json:"access_token"`
+	IDToken      string  `json:"id_token"`
 	RefreshToken string  `json:"refresh_token"`
 	TokenType    string  `json:"token_type"`
 	ExpiresIn    FlexInt `json:"expires_in"`
@@ -96,6 +98,7 @@ type tokenResponse struct {
 
 type Token struct {
 	AccessToken  string `json:"access_token"`
+	IDToken      string `json:"id_token"`
 	RefreshToken string `json:"refresh_token"`
 	TokenType    string `json:"token_type"`
 	ExpiresAt    int64  `json:"expires_at"`
